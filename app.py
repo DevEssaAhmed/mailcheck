@@ -50,20 +50,13 @@ def email_domain(email):
     return email.rsplit('@', 1)[1].lower().rstrip('.')
 
 
-def batch_probe_allowed(email):
-    domain = email_domain(email)
-    return domain in BATCH_ALLOWED_DOMAINS and domain not in PUBLIC_BATCH_DOMAINS
+
 
 
 def syntax_only_result(email, reason=None):
     domain = email_domain(email)
     if reason is None:
-        if domain in PUBLIC_BATCH_DOMAINS:
-            reason = (
-                'Batch mailbox probing is disabled for public mailbox providers. '
-                'The address format is valid, but mailbox existence was not tested.'
-            )
-        else:
+        
             reason = (
                 'Mailbox probing was skipped because this domain is not allow-listed for batch checks. '
                 'Set MAILCHECK_BATCH_ALLOWED_DOMAINS to domains you control.'
@@ -301,8 +294,8 @@ class Handler(BaseHTTPRequestHandler):
                         'elapsed': 0,
                     },
                 )
-            if not batch_probe_allowed(email):
-                return self.send(200, syntax_only_result(email))
+    
+            
             return self._run_reacher(email)
 
         try:
