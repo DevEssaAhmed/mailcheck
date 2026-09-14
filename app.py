@@ -17,12 +17,6 @@ TOKEN = secrets.token_urlsafe(32)
 LOCK = threading.Lock()
 TIMEOUT = 60
 
-# Batch mode is intentionally restricted to domains the operator controls.
-# Well-known public mailbox providers stay syntax-only even if they are placed
-# in MAILCHECK_BATCH_ALLOWED_DOMAINS.
-
-
-
 
 def parse_result(output):
     """Find the result object even when Reacher writes tracing lines before JSON."""
@@ -44,30 +38,6 @@ def validate_email(value):
     if len(value) > 254 or not re.fullmatch(r'[^\s@\x00-\x1f\x7f]+@[^\s@\x00-\x1f\x7f]+', value):
         raise ValueError('Enter one email address, such as name@company.com.')
     return value
-
-
-def email_domain(email):
-    return email.rsplit('@', 1)[1].lower().rstrip('.')
-
-
-
-
-
-def syntax_only_result(email, reason=None):
-    domain = email_domain(email)
-    if reason is None:
-        
-            reason = (
-                'Mailbox probing was skipped because this domain is not allow-listed for batch checks. '
-                'Set MAILCHECK_BATCH_ALLOWED_DOMAINS to domains you control.'
-            )
-    return {
-        'email': email,
-        'status': 'syntax_only',
-        'reason': reason,
-        'details': {'syntax': {'is_valid_syntax': True}},
-        'elapsed': 0,
-    }
 
 
 def check(email):
@@ -97,9 +67,12 @@ def check(email):
                 'or blocking verification. Check outbound port 25.'
             ),
             'details': None,
+            'elapsed': round(time.monotonic() - started, 1),
         }
     if process.returncode != 0:
-        raise RuntimeError('Reacher could not complete the check. Check the executable and network settings; see README.md.')
+        raise RuntimeError(
+            'Reacher could not complete the check. Check the executable and network settings; see README.md.'
+        )
     data = parse_result(process.stdout)
     status = data.get('is_reachable')
     if status not in ('safe', 'risky', 'invalid', 'unknown'):
@@ -159,7 +132,7 @@ class Handler(BaseHTTPRequestHandler):
                     'ready': BINARY.is_file() and os.access(BINARY, os.X_OK),
                     'token': TOKEN,
                     'codespaces': os.environ.get('CODESPACES') == 'true',
-                    'batch_allowed_domains': sorted(BATCH_ALLOWED_DOMAINS - PUBLIC_BATCH_DOMAINS),
+                    'batch_allowed_domains': [],  # unrestricted – no allow-list
                 },
             )
         if self.path == '/favicon.ico':
@@ -279,29 +252,24 @@ class Handler(BaseHTTPRequestHandler):
         if body is None:
             return
 
-        if self.path == '/api/batch-check':
-            raw_email = body.get('email')
-            try:
-                email = validate_email(raw_email)
-            except ValueError as exc:
+        # Both individual and bulk paths are now unrestricted
+        try:
+            email = validate_email(body.get('email'))
+        except ValueError as exc:
+            if self.path == '/api/batch-check':
+                # Keep the same response shape the frontend expects for bulk
                 return self.send(
                     200,
                     {
-                        'email': raw_email if isinstance(raw_email, str) else '',
+                        'email': body.get('email') if isinstance(body.get('email'), str) else '',
                         'status': 'invalid_syntax',
                         'reason': str(exc),
                         'details': {'syntax': {'is_valid_syntax': False}},
                         'elapsed': 0,
                     },
                 )
-    
-            
-            return self._run_reacher(email)
-
-        try:
-            email = validate_email(body.get('email'))
-        except ValueError as exc:
             return self.send(400, {'error': str(exc)})
+
         return self._run_reacher(email)
 
 
@@ -337,7 +305,7 @@ if __name__ == '__main__':
     )
     if not BINARY.is_file():
         print('Reacher is missing: run python3 setup_reacher.py before checking emails.', flush=True)
-    
+
     if args.open:
         threading.Timer(0.7, lambda: webbrowser.open(url)).start()
     try:
