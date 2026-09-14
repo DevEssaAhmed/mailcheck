@@ -14,7 +14,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 ROOT = Path(__file__).resolve().parent
 BINARY = Path(os.environ.get('REACHER_BIN', str(ROOT / 'bin' / 'check_if_email_exists'))).expanduser().resolve()
 TOKEN = secrets.token_urlsafe(32)
-LOCK = threading.Lock()
+MAX_CONCURRENT = int(os.environ.get("MAILCHECK_MAX_CONCURRENT", "4"))
+SEMAPHORE = threading.Semaphore(MAX_CONCURRENT)
 TIMEOUT = 60
 
 
@@ -133,6 +134,7 @@ class Handler(BaseHTTPRequestHandler):
                     'token': TOKEN,
                     'codespaces': os.environ.get('CODESPACES') == 'true',
                     'batch_allowed_domains': [],  # unrestricted – no allow-list
+                    'max_concurrent': MAX_CONCURRENT,
                 },
             )
         if self.path == '/favicon.ico':
@@ -225,8 +227,16 @@ class Handler(BaseHTTPRequestHandler):
                     )
                 },
             )
-        if not LOCK.acquire(blocking=False):
-            return self.send(429, {'error': 'Another check is still running. Please wait for it to finish.'})
+        if not SEMAPHORE.acquire(blocking=False):
+            return self.send(
+                429,
+                {
+                    'error': (
+                        f'Too many concurrent checks (limit {MAX_CONCURRENT}). '
+                        'Please wait for some to finish.'
+                    )
+                },
+            )
         try:
             self.send(200, check(email))
         except (OSError, ValueError, RuntimeError):
@@ -240,7 +250,7 @@ class Handler(BaseHTTPRequestHandler):
                 },
             )
         finally:
-            LOCK.release()
+            SEMAPHORE.release()
 
     def do_POST(self):
         if not self._authorized_post():
@@ -300,6 +310,7 @@ if __name__ == '__main__':
     url = f'http://127.0.0.1:{server.server_address[1]}'
     print(
         f'Mailcheck is running at {url}\n'
+        f'Concurrency limit: {MAX_CONCURRENT} simultaneous checks\n'
         'Keep this window open. Press Ctrl+C to stop.',
         flush=True,
     )
