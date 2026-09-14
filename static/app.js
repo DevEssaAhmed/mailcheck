@@ -967,19 +967,6 @@ $("batch-file").addEventListener(
       }
 
 
-      if (
-        batchEmails.length >
-        5000
-      ) {
-
-        batchEmails = [];
-
-        throw new Error(
-          "For one batch, use at most 5,000 unique lines."
-        );
-      }
-
-
       $("batch-file-meta").textContent =
         `${file.name} · ` +
         `${batchEmails.length.toLocaleString()} ` +
