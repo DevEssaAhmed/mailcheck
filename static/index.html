@@ -1,12 +1,40 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>Mailcheck · Essa's email verifier</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>Mailcheck · Essa's email verifier</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/batch.css"><script defer src="/app.js"></script></head>
 <body>
 <header><a class="brand" href="/" aria-label="Mailcheck home"><span class="brand-icon">@</span>mailcheck<span class="local">LOCAL</span></a><span class="owner">Essa's workspace</span></header>
 <main>
- <div class="page-top"><div><p class="eyebrow">EMAIL VERIFICATION</p><h1>A closer look at an address.</h1><p class="intro">Check email reachability without sending a message.</p></div><span id="engine" class="engine">Connecting to Reacher…</span></div>
+ <div class="page-top"><div><p class="eyebrow">EMAIL VERIFICATION</p><h1>A closer look at an address.</h1><p class="intro">Check one address, or upload a text file for a batch report.</p></div><span id="engine" class="engine">Connecting to Reacher…</span></div>
  <div class="workspace">
-  <section class="input-panel" aria-labelledby="input-heading"><div class="section-num">01 / CHECK</div><h2 id="input-heading">Email address</h2><form id="check-form" novalidate><label for="email">Who would you like to verify?</label><input id="email" name="email" type="email" autocomplete="off" spellcheck="false" maxlength="254" placeholder="name@company.com" required aria-describedby="input-hint"><p class="hint" id="input-hint">Enter one address. A check can take up to 60 seconds.</p><button id="check-button" type="submit" disabled>Check address <span aria-hidden="true">↗</span></button></form><p id="error" class="error" role="alert" hidden></p><div class="privacy"><span class="lock-symbol" aria-hidden="true">◇</span><div><strong id="runtime-label">Runs on your computer</strong><p>Addresses are checked directly by Reacher. This app does not save your checks.</p></div></div><div class="engine-note"><strong>Powered by Reacher</strong><p>Open-source verification, running as a native executable. No Docker setup or paid API key required.</p></div></section>
+  <section class="input-panel" aria-labelledby="input-heading">
+   <div class="section-num">01 / CHECK</div>
+   <h2 id="input-heading">Email address</h2>
+   <form id="check-form" novalidate>
+    <label for="email">Who would you like to verify?</label>
+    <input id="email" name="email" type="email" autocomplete="off" spellcheck="false" maxlength="254" placeholder="name@company.com" required aria-describedby="input-hint">
+    <p class="hint" id="input-hint">Enter one address. A check can take up to 60 seconds.</p>
+    <button id="check-button" type="submit" disabled>Check address <span aria-hidden="true">↗</span></button>
+   </form>
+
+   <div class="batch-block">
+    <div class="batch-heading"><span class="section-num">BATCH</span><span class="batch-pill">TXT → CSV</span></div>
+    <label for="batch-file">Upload a text file</label>
+    <input id="batch-file" class="file-input" type="file" accept=".txt,text/plain">
+    <p id="batch-file-meta" class="hint">One email address per line. Duplicate lines are removed.</p>
+    <button id="batch-start" type="button" disabled>Run batch <span aria-hidden="true">↗</span></button>
+    <div id="batch-progress-wrap" class="batch-progress-wrap" hidden>
+     <div class="batch-progress-track"><div id="batch-progress-bar" class="batch-progress-bar"></div></div>
+     <p id="batch-progress" class="hint" role="status"></p>
+    </div>
+    <button id="batch-download" class="secondary-button" type="button" hidden>Download CSV <span aria-hidden="true">↓</span></button>
+    <p id="batch-summary" class="batch-summary" hidden></p>
+    <p class="hint batch-policy">Batch mailbox probing only runs for domains explicitly allow-listed with <code>MAILCHECK_BATCH_ALLOWED_DOMAINS</code>. Public mailbox providers are exported as syntax-only.</p>
+   </div>
+
+   <p id="error" class="error" role="alert" hidden></p>
+   <div class="privacy"><span class="lock-symbol" aria-hidden="true">◇</span><div><strong id="runtime-label">Runs on your computer</strong><p>Addresses are checked directly by Reacher. This app does not save your checks.</p></div></div>
+   <div class="engine-note"><strong>Powered by Reacher</strong><p>Open-source verification, running as a native executable. No Docker setup or paid API key required.</p></div>
+  </section>
   <section class="result-panel" aria-labelledby="result-heading" aria-busy="false"><div class="result-top"><div class="section-num">02 / RESULT</div><span id="timing" class="hint"></span></div><div id="empty"><div class="empty-mark" aria-hidden="true">@</div><h2 id="result-heading">Your result appears here</h2><p>See the address format, mail server checks,<br class="desktop"> and mailbox reachability in one place.</p><div class="check-labels"><span>Format</span><span>Mail server</span><span>Mailbox</span></div></div><div id="loading" hidden role="status"><div class="spinner"></div><h2>Checking the address…</h2><p>Waiting for Reacher and the receiving mail server.</p><p class="hint">Slow or blocked responses can be inconclusive.</p></div><div id="result" hidden aria-live="polite"><div class="verdict-row"><h2 id="result-email"></h2><span id="verdict" class="badge"></span></div><p id="reason"></p><dl id="checks"></dl><details id="raw-details"><summary>View Reacher's full result</summary><pre id="raw"></pre></details></div></section>
  </div>
  <aside class="interpret"><h2>Read the result with context.</h2><div><p><span class="key safe"></span><strong>Reachable</strong><br>Reacher reports the address as safe.</p><p><span class="key risky"></span><strong>Risky</strong><br>Review the individual checks.</p><p><span class="key invalid"></span><strong>Invalid</strong><br>Reacher reports a failed address.</p><p><span class="key unknown"></span><strong>Inconclusive</strong><br>Unable to confirm the mailbox.</p></div></aside>
