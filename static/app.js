@@ -162,17 +162,25 @@ function buildCsv(rows) {
   return lines.join("\r\n");
 }
 
-function downloadBatchCsv() {
-  if (!batchResults.length) return;
+function reachableBatchResults() {
+  return batchResults.filter(row => row.status === "safe");
+}
 
-  const blob = new Blob([buildCsv(batchResults)], {
+function downloadBatchCsv() {
+  const reachable = reachableBatchResults();
+  if (!reachable.length) {
+    setError("No reachable addresses were found to export.");
+    return;
+  }
+
+  const blob = new Blob([buildCsv(reachable)], {
     type: "text/csv;charset=utf-8"
   });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   const stamp = new Date().toISOString().replaceAll(":", "-").replace(/\.\d{3}Z$/, "Z");
   a.href = url;
-  a.download = `mailcheck-batch-${stamp}.csv`;
+  a.download = `mailcheck-reachable-${stamp}.csv`;
   document.body.append(a);
   a.click();
   a.remove();
@@ -249,7 +257,7 @@ async function runBatch() {
   }
 
   summarizeBatch(batchResults);
-  $("batch-download").hidden = false;
+  $("batch-download").hidden = reachableBatchResults().length === 0;
   batchRunning = false;
   updateBatchControls();
 }
