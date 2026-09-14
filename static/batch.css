@@ -1,0 +1,91 @@
+.batch-block{
+  margin-top:30px;
+  padding-top:26px;
+  border-top:1px solid #e5eaf2;
+}
+.batch-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+.batch-heading .section-num{
+  margin:0;
+}
+.batch-pill{
+  border:1px solid #d7dfeb;
+  border-radius:999px;
+  padding:4px 8px;
+  color:#5d6c82;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.8px;
+}
+.file-input{
+  min-height:48px;
+  padding:10px;
+  font-size:13px;
+}
+.file-input::file-selector-button{
+  border:0;
+  border-radius:5px;
+  background:#eaf0fb;
+  color:#21406f;
+  padding:8px 10px;
+  margin-right:10px;
+  cursor:pointer;
+  font:inherit;
+  font-weight:600;
+}
+#batch-start{
+  margin-top:15px;
+}
+.secondary-button{
+  margin-top:10px;
+  background:#eef3fc;
+  color:#21406f;
+  border:1px solid #d4dfef;
+}
+.secondary-button:hover{
+  background:#e1e9f8;
+}
+.batch-progress-wrap{
+  margin-top:17px;
+}
+.batch-progress-track{
+  width:100%;
+  height:7px;
+  border-radius:999px;
+  overflow:hidden;
+  background:#e6ebf3;
+}
+.batch-progress-bar{
+  height:100%;
+  width:0;
+  background:#214dda;
+  transition:width .15s ease;
+}
+.batch-progress-wrap .hint{
+  margin:8px 0 0;
+  overflow-wrap:anywhere;
+}
+.batch-summary{
+  margin:12px 0 0;
+  color:#3f526f;
+  font-size:12px;
+  line-height:1.6;
+}
+.batch-policy{
+  margin-top:16px!important;
+}
+.batch-policy code{
+  word-break:break-word;
+  color:#3d4e68;
+  background:#f2f5fa;
+  border-radius:4px;
+  padding:2px 4px;
+}
+@media(prefers-reduced-motion:reduce){
+  .batch-progress-bar{transition:none}
+}
