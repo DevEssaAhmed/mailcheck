@@ -77,7 +77,7 @@ Point `REACHER_BIN` at `target/release/check_if_email_exists` before starting th
 
 ## Privacy and scope
 
-This is a personal development/local app, not an internet-facing production service. It listens on loopback, validates the Host and Origin, uses a per-process request token, limits request size, invokes the CLI without a shell, and runs one check at a time with a 60-second timeout. It does not log addresses or save check history. In Codespaces, only the exact forwarded hostname from the Codespaces environment is accepted; GitHub's **private port authentication** provides the access boundary. Do not make the port public. Reacher contacts DNS/mail infrastructure (and a proxy if you configure one); it is not an offline check.
+This is a personal development/local app, not an internet-facing production service. It listens on loopback, validates the Host and Origin, uses a per-process request token, limits request size, invokes the CLI without a shell, and runs one check at a time with a 60-second timeout. It does not log addresses or save check history. Browser same-origin requests are recognized using Fetch Metadata, which survives port-forwarding origin rewriting; other browser origins must match the explicit allowlist. Request tokens are refreshed automatically. In Codespaces, only the exact forwarded hostname from the Codespaces environment (or the local proxy hostname) is accepted; GitHub's **private port authentication** provides the access boundary. Do not make the port public. Reacher contacts DNS/mail infrastructure (and a proxy if you configure one); it is not an offline check.
 
 ## Verification and development
 

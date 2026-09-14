@@ -97,18 +97,26 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(403, {'error': 'Local access only.'})
         if self.path == '/api/status':
             return self.send(200, {'ready': BINARY.is_file() and os.access(BINARY, os.X_OK), 'token': TOKEN, 'codespaces': os.environ.get('CODESPACES') == 'true'})
-        assets = {'/': ('index.html', 'text/html'), '/app.js': ('app.js', 'text/javascript'), '/style.css': ('style.css', 'text/css')}
+        if self.path == '/favicon.ico':
+            return self.send(204, b'', 'image/x-icon')
+        assets = {'/': ('index.html', 'text/html'), '/app.js': ('app.js', 'text/javascript'), '/style.css': ('style.css', 'text/css'), '/favicon.svg': ('favicon.svg', 'image/svg+xml')}
         if self.path not in assets:
             return self.send(404, {'error': 'Not found.'})
         name, mime = assets[self.path]
         self.send(200, (ROOT / 'static' / name).read_bytes(), mime + '; charset=utf-8')
 
     def do_POST(self):
-        if not self.trusted_host() or self.headers.get('X-Mailcheck-Token') != TOKEN:
-            return self.send(403, {'error': 'Reload this local app before checking.'})
+        if not self.trusted_host():
+            return self.send(403, {'code': 'host_rejected', 'error': 'This app address is not recognized. Open port 8765 through Codespaces Ports → Open in Browser.'})
+        if not secrets.compare_digest(self.headers.get('X-Mailcheck-Token', '').encode(), TOKEN.encode()):
+            return self.send(403, {'code': 'session_expired', 'error': 'The app restarted and your session expired. Refresh this page.'})
+        # Fetch Metadata is set by the browser and cannot be supplied by page JS.
+        # It describes the browser-facing origin even when a port-forwarding proxy
+        # rewrites Host/Origin. Never accept "same-site" as "same-origin".
+        fetch_site = self.headers.get('Sec-Fetch-Site')
         origin = self.headers.get('Origin')
-        if origin and origin not in self.server.allowed_origins:
-            return self.send(403, {'error': 'Local access only.'})
+        if fetch_site in ('cross-site', 'same-site') or (fetch_site != 'same-origin' and origin and origin not in self.server.allowed_origins):
+            return self.send(403, {'code': 'origin_rejected', 'error': 'Request origin was rejected. Open the app in its own browser tab using Ports → Open in Browser, then refresh.'})
         if self.path != '/api/check':
             return self.send(404, {'error': 'Not found.'})
         if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':

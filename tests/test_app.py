@@ -107,6 +107,35 @@ class HTTPTests(unittest.TestCase):
         finally:
             server.server_close()
 
+    def test_forwarded_same_origin_browser_request(self):
+        headers = {'X-Mailcheck-Token': app.TOKEN, 'Content-Type': 'application/json',
+                   'Sec-Fetch-Site': 'same-origin', 'Origin': 'https://forwarded-workspace.app.github.dev'}
+        with patch.object(app, 'BINARY', Path(__file__)), patch('app.check', return_value={'status': 'unknown'}):
+            self.assertEqual(self.request('/api/check', {'email': 'a@b'}, headers)[0], 200)
+
+    def test_forwarded_requests_still_require_token_and_host(self):
+        headers = {'X-Mailcheck-Token': 'old-token', 'Content-Type': 'application/json',
+                   'Sec-Fetch-Site': 'same-origin'}
+        status, body = self.request('/api/check', {'email': 'a@b'}, headers)
+        self.assertEqual(status, 403)
+        self.assertEqual(json.loads(body)['code'], 'session_expired')
+        headers.update({'X-Mailcheck-Token': app.TOKEN, 'Host': 'attacker.example'})
+        self.assertEqual(self.request('/api/check', {'email': 'a@b'}, headers)[0], 403)
+
+    def test_cross_site_and_same_site_rejected_even_with_token(self):
+        for site in ['cross-site', 'same-site']:
+            headers = {'X-Mailcheck-Token': app.TOKEN, 'Content-Type': 'application/json',
+                       'Sec-Fetch-Site': site, 'Origin': self.base}
+            status, body = self.request('/api/check', {'email': 'a@b'}, headers)
+            self.assertEqual(status, 403)
+            self.assertEqual(json.loads(body)['code'], 'origin_rejected')
+
+    def test_favicon_routes(self):
+        status, svg = self.request('/favicon.svg')
+        self.assertEqual(status, 200)
+        self.assertIn(b'<svg', svg)
+        self.assertEqual(self.request('/favicon.ico')[0], 204)
+
 
 if __name__ == '__main__':
     unittest.main()

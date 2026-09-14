@@ -28,11 +28,37 @@ function render(data) {
   $('raw-details').open = false;
   $('result').hidden = false;
 }
+async function readResponse(response) {
+  const type = response.headers.get('Content-Type') || '';
+  if (!type.includes('application/json')) {
+    throw new Error(`The forwarded app returned HTTP ${response.status}. Open port 8765 in a new browser tab and sign in to GitHub if prompted.`);
+  }
+  return response.json();
+}
+async function refreshSession() {
+  const response = await fetch('/api/status', {cache: 'no-store', credentials: 'same-origin'});
+  const data = await readResponse(response);
+  if (!response.ok) throw new Error(data.error || 'Could not reconnect to the app.');
+  token = data.token;
+  return data;
+}
+async function submitCheck(email) {
+  // Refresh before every check so a server restart cannot leave this tab stuck.
+  await refreshSession();
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const response = await fetch('/api/check', {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json', 'X-Mailcheck-Token': token}, body: JSON.stringify({email})});
+    const data = await readResponse(response);
+    if (response.status === 403 && data.code === 'session_expired' && attempt === 0) {
+      await refreshSession();
+      continue;
+    }
+    if (!response.ok) throw new Error(data.error || `The check failed (HTTP ${response.status}).`);
+    return data;
+  }
+}
 async function boot() {
   try {
-    const response = await fetch('/api/status');
-    if (!response.ok) throw new Error();
-    const data = await response.json();
+    const data = await refreshSession();
     token = data.token; ready = data.ready;
     if (data.codespaces) {
       $('runtime-label').textContent = 'Runs in your Codespace';
@@ -61,10 +87,7 @@ $('check-form').addEventListener('submit', async event => {
   $('timing').textContent = ''; $('check-button').disabled = true; $('email').readOnly = true;
   document.querySelector('.result-panel').setAttribute('aria-busy', 'true');
   try {
-    const response = await fetch('/api/check', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Mailcheck-Token': token}, body: JSON.stringify({email})});
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'The check failed. Please try again.');
-    render(data);
+    render(await submitCheck(email));
   } catch (error) {
     $('error').textContent = error.message === 'Failed to fetch' ? 'The local app disconnected. Restart it and refresh this page.' : error.message;
     $('error').hidden = false; $('empty').hidden = false;
