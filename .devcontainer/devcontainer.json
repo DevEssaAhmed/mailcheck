@@ -1,0 +1,14 @@
+{
+  "name": "Mailcheck · Reacher without Docker setup",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "forwardPorts": [8765],
+  "portsAttributes": {
+    "8765": {"label": "Mailcheck", "onAutoForward": "openBrowser", "protocol": "http"}
+  },
+  "postCreateCommand": "python3 setup_reacher.py",
+  "customizations": {
+    "vscode": {
+      "settings": {"remote.autoForwardPorts": true}
+    }
+  }
+}
