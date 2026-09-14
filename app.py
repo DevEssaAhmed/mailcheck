@@ -14,7 +14,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 ROOT = Path(__file__).resolve().parent
 BINARY = Path(os.environ.get('REACHER_BIN', str(ROOT / 'bin' / 'check_if_email_exists'))).expanduser().resolve()
 TOKEN = secrets.token_urlsafe(32)
-MAX_CONCURRENT = int(os.environ.get("MAILCHECK_MAX_CONCURRENT", "4"))
+MAX_CONCURRENT = int(os.environ.get("MAILCHECK_MAX_CONCURRENT", "20"))
 SEMAPHORE = threading.Semaphore(MAX_CONCURRENT)
 TIMEOUT = 60
 
