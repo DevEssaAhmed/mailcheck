@@ -344,12 +344,7 @@ if __name__ == '__main__':
     )
     if not BINARY.is_file():
         print('Reacher is missing: run python3 setup_reacher.py before checking emails.', flush=True)
-    if BATCH_ALLOWED_DOMAINS:
-        print(
-            'Batch mailbox probing enabled for: '
-            + ', '.join(sorted(BATCH_ALLOWED_DOMAINS - PUBLIC_BATCH_DOMAINS)),
-            flush=True,
-        )
+    
     if args.open:
         threading.Timer(0.7, lambda: webbrowser.open(url)).start()
     try:
