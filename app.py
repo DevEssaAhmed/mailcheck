@@ -20,21 +20,8 @@ TIMEOUT = 60
 # Batch mode is intentionally restricted to domains the operator controls.
 # Well-known public mailbox providers stay syntax-only even if they are placed
 # in MAILCHECK_BATCH_ALLOWED_DOMAINS.
-PUBLIC_BATCH_DOMAINS = {
-    'gmail.com', 'googlemail.com',
-    'outlook.com', 'hotmail.com', 'live.com', 'msn.com',
-    'yahoo.com', 'ymail.com', 'rocketmail.com',
-    'icloud.com', 'me.com', 'mac.com',
-    'aol.com',
-    'proton.me', 'protonmail.com',
-    'gmx.com', 'gmx.net',
-    'mail.com',
-}
-BATCH_ALLOWED_DOMAINS = {
-    item.strip().lower().rstrip('.')
-    for item in os.environ.get('MAILCHECK_BATCH_ALLOWED_DOMAINS', '').split(',')
-    if item.strip()
-}
+
+
 
 
 def parse_result(output):
