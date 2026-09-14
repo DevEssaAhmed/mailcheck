@@ -26,9 +26,9 @@
      <div class="batch-progress-track"><div id="batch-progress-bar" class="batch-progress-bar"></div></div>
      <p id="batch-progress" class="hint" role="status"></p>
     </div>
-    <button id="batch-download" class="secondary-button" type="button" hidden>Download CSV <span aria-hidden="true">↓</span></button>
+    <button id="batch-download" class="secondary-button" type="button" hidden>Download reachable CSV <span aria-hidden="true">↓</span></button>
     <p id="batch-summary" class="batch-summary" hidden></p>
-    <p class="hint batch-policy">Batch mailbox probing only runs for domains explicitly allow-listed with <code>MAILCHECK_BATCH_ALLOWED_DOMAINS</code>. Public mailbox providers are exported as syntax-only.</p>
+    <p class="hint batch-policy">The downloadable CSV includes only addresses Reacher reports as reachable. Batch mailbox probing only runs for domains explicitly allow-listed with <code>MAILCHECK_BATCH_ALLOWED_DOMAINS</code>; public mailbox providers remain syntax-only in batch mode.</p>
    </div>
 
    <p id="error" class="error" role="alert" hidden></p>
